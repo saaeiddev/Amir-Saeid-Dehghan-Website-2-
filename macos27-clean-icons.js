@@ -63,7 +63,8 @@
     document.querySelectorAll('.dock-app').forEach(btn => {
       const kind = btn.dataset.dock;
       const holder = btn.querySelector('.dock-icon');
-      if (!holder) return;
+      if (!holder || holder.dataset.m27Upgraded === 'true') return;
+      holder.dataset.m27Upgraded = 'true';
       if (kind === 'finder') {
         holder.classList.add('m27-finder-icon');
         holder.innerHTML = finderSVG();
@@ -74,7 +75,6 @@
     });
   }
 
-  function run() { upgradeDesktop(); upgradeDock(); }
-  run();
-  new MutationObserver(run).observe(document.body, {childList:true, subtree:true});
+  upgradeDesktop();
+  upgradeDock();
 })();
