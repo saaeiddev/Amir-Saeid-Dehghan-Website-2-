@@ -30,11 +30,6 @@
     return `<svg viewBox="0 0 24 24" aria-hidden="true">${paths[name] || paths.folder}</svg>`;
   };
 
-  const defer = (callback) => {
-    if (typeof queueMicrotask === 'function') queueMicrotask(callback);
-    else Promise.resolve().then(callback);
-  };
-
   function openFolder(id) {
     const dockButton = document.querySelector(`[data-dock="${id}"]`);
     const desktopButton = document.querySelector(`[data-open="${id}"]`);
@@ -140,11 +135,15 @@
     );
     if (!target) return;
 
-    defer(upgradeExistingWindows);
-
+    // Run after component-level click handlers have created/restored the window.
+    // Open All intentionally creates windows over a few bounded timers, so it gets
+    // one final idempotent upgrade pass after the last scheduled window exists.
     if (target.matches('[data-command="open-all"]')) {
-      window.setTimeout(upgradeExistingWindows, 360);
+      window.setTimeout(upgradeExistingWindows, 300);
+      return;
     }
+
+    upgradeExistingWindows();
   }
 
   function buildSystemButtons() {
@@ -381,7 +380,7 @@
     dock.addEventListener('blur', reset, true);
   }
 
-  document.addEventListener('click', scheduleWindowUpgrade, true);
+  document.addEventListener('click', scheduleWindowUpgrade);
 
   document.addEventListener('pointerdown', (event) => {
     if (!event.target.closest('.gg-control-center') && !event.target.closest('[data-gg-control]')) {
