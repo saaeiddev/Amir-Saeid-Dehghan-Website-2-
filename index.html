@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#171d37" />
+  <meta name="description" content="Amir Saeid Dehghan — Personal Desktop, an interactive macOS-inspired portfolio." />
+  <title>Amir Saeid Dehghan — Personal Desktop</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#desktop-icons">Skip to desktop folders</a>
+  <div id="app" class="desktop-shell">
+    <div class="wallpaper" aria-hidden="true">
+      <div class="wallpaper-glow glow-a"></div>
+      <div class="wallpaper-glow glow-b"></div>
+      <div class="wallpaper-glow glow-c"></div>
+      <div class="wallpaper-noise"></div>
+    </div>
+
+    <header class="menu-bar glass" role="banner">
+      <nav class="menu-left" aria-label="macOS menu">
+        <button class="menu-trigger apple-mark" data-menu="apple" aria-haspopup="menu" aria-expanded="false" aria-label="Apple menu"></button>
+        <button class="menu-trigger menu-owner" data-menu="owner" aria-haspopup="menu" aria-expanded="false">Amir Saeid Dehghan</button>
+        <button class="menu-trigger" data-menu="file" aria-haspopup="menu" aria-expanded="false">File</button>
+        <button class="menu-trigger" data-menu="view" aria-haspopup="menu" aria-expanded="false">View</button>
+        <button class="menu-trigger" data-menu="window" aria-haspopup="menu" aria-expanded="false">Window</button>
+        <button class="menu-trigger hide-small" data-menu="help" aria-haspopup="menu" aria-expanded="false">Help</button>
+      </nav>
+      <div class="menu-right" aria-label="System status">
+        <span class="status-icon" aria-label="Wi-Fi connected">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5c4.8-4 11.2-4 16 0M7 13c3-2.5 7-2.5 10 0M10.2 16.4c1.1-.8 2.5-.8 3.6 0M12 19h.01"/></svg>
+        </span>
+        <span class="status-icon hide-small" aria-label="Sound on">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 10v4h4l4 3V7l-4 3H5Zm11-1.2a5 5 0 0 1 0 6.4m2.2-8.7a8 8 0 0 1 0 11"/></svg>
+        </span>
+        <span class="battery" aria-label="Battery 82 percent"><span></span></span>
+        <time id="menu-clock" class="menu-clock" aria-live="off"></time>
+      </div>
+      <div id="menu-popover" class="menu-popover glass hidden" role="menu"></div>
+    </header>
+
+    <main id="desktop" class="desktop" aria-label="Amir Saeid Dehghan personal desktop">
+      <section id="desktop-icons" class="desktop-icons" aria-label="Desktop folders"></section>
+      <section id="window-layer" class="window-layer" aria-label="Open windows"></section>
+    </main>
+
+    <div id="photo-viewer" class="viewer-backdrop hidden" role="dialog" aria-modal="true" aria-label="Photo viewer">
+      <button class="viewer-close" type="button" aria-label="Close photo viewer">×</button>
+      <button class="viewer-nav viewer-prev" type="button" aria-label="Previous photo">‹</button>
+      <figure class="photo-stage glass">
+        <img id="viewer-image" alt="" />
+        <figcaption id="viewer-caption"></figcaption>
+      </figure>
+      <button class="viewer-nav viewer-next" type="button" aria-label="Next photo">›</button>
+    </div>
+
+    <div id="detail-viewer" class="detail-backdrop hidden" role="dialog" aria-modal="true" aria-label="Media details">
+      <article id="detail-card" class="detail-card glass"></article>
+    </div>
+
+    <footer class="dock-wrap" aria-label="Applications Dock">
+      <nav id="dock" class="dock glass"></nav>
+    </footer>
+  </div>
+
+  <script src="./data.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
