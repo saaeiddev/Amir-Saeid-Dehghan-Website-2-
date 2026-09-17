@@ -8,10 +8,21 @@ window.PORTFOLIO_DATA = {
     { id: 'movies', label: 'My Favorite Movies', short: 'Movies', icon: 'movies', accent: '#ca8cff' }
   ],
   music: [
-    { title: 'Enter Sandman', artist: 'Metallica', year: '1991', art: 'sandman', tone: 'midnight' },
-    { title: 'Roadhouse Blues', artist: 'The Doors', year: '1970', art: 'roadhouse', tone: 'ember' },
-    { title: 'Late Goodbye', artist: 'Poets of the Fall', year: '2003', art: 'late', tone: 'violet' },
-    { title: 'Personal Playlist', artist: 'Amir’s Library', year: 'Now', art: 'playlist', tone: 'aqua' }
+    {
+      title: 'Enter Sandman', artist: 'Metallica', year: '1991', tone: 'midnight', duration: '5:31',
+      cover: 'https://draw.acharts.net/cover/16421-54d003e9c5ea9-l.jpg',
+      coverAlt: 'Metallica — The Black Album original album artwork'
+    },
+    {
+      title: 'Roadhouse Blues', artist: 'The Doors', year: '1970', tone: 'ember', duration: '4:05',
+      cover: 'https://uk.rarevinyl.com/cdn/shop/products/the-doors-morrison-hotel-1st-ex-uk-vinyl-lp-album-record-eks75007-575209_1200x1200_crop_center.jpg?v=1707919999',
+      coverAlt: 'The Doors — Morrison Hotel original album artwork'
+    },
+    {
+      title: 'Late Goodbye', artist: 'Poets of the Fall', year: '2004', tone: 'violet', duration: '4:10',
+      cover: 'https://kane.fi/181530-large_default/poets-of-the-fall-cd-late-goodbye-cd-single-kansi-ex-levy-ex-kaeytetty-cd.jpg',
+      coverAlt: 'Poets of the Fall — Late Goodbye original single artwork'
+    }
   ],
   photos: [
     { title: 'Studio Light', src: 'photo-1', caption: 'A placeholder for personal studio photography.' },
@@ -36,18 +47,50 @@ window.PORTFOLIO_DATA = {
     { title: 'Future Book', subtitle: 'Reserved shelf for the next publication', status: 'Coming later', mark: '+' }
   ],
   games: [
-    { title: 'Bully', platform: 'PlayStation 2 / PC', year: '2006', description: 'Open-world school-life action adventure with sharp character and world design.', code: 'BLY' },
-    { title: 'The Simpsons: Hit & Run', platform: 'PS2 / Xbox / PC', year: '2003', description: 'A cult comedy driving adventure built around Springfield.', code: 'SHR' },
-    { title: 'TMNT', platform: 'Multi-platform', year: '2000s', description: 'Fast arcade-inspired action and co-op nostalgia.', code: 'TMNT' },
-    { title: 'Rayman', platform: 'Multi-platform', year: 'Series', description: 'Expressive platforming, playful animation and iconic art direction.', code: 'RAY' },
-    { title: 'Cars', platform: 'Multi-platform', year: '2006', description: 'A nostalgic racing adaptation full of character and arcade charm.', code: 'CAR' },
-    { title: 'Ben 10', platform: 'Multi-platform', year: 'Series', description: 'Transformation-driven action inspired by the Omnitrix universe.', code: 'B10' }
+    {
+      title: 'Bully', platform: 'PlayStation 2', year: '2006',
+      description: 'Rockstar’s open-world school-life action adventure and one of my favorite classics.', code: 'BLY',
+      cover: 'https://i.ebayimg.com/images/g/ZP4AAeSwu~Jn4pIf/s-l400.jpg',
+      coverAlt: 'Bully original PlayStation 2 box art'
+    },
+    {
+      title: 'Rayman', platform: 'PlayStation', year: '1995',
+      description: 'The original Rayman — expressive platforming, playful animation and iconic art direction.', code: 'RAY',
+      cover: 'https://images.launchbox-app.com/86976da1-a3e4-467c-991d-9f62edc6f39e.png',
+      coverAlt: 'Rayman original PlayStation box art'
+    },
+    {
+      title: 'Max Payne 2: The Fall of Max Payne', platform: 'PC / PS2 / Xbox', year: '2003',
+      description: 'A film-noir action classic with a dark cinematic atmosphere and memorable storytelling.', code: 'MP2',
+      cover: 'https://www.mobygames.com/images/covers/l/232083-max-payne-2-the-fall-of-max-payne-windows-front-cover.jpg',
+      coverAlt: 'Max Payne 2 The Fall of Max Payne original PC box art'
+    }
   ],
   movies: [
-    { title: 'The Incredibles', genre: 'Animation · Action', year: '2004', info: 'Stylish superhero filmmaking with exceptional visual storytelling and family dynamics.', code: 'INC', rating: 'Favorite' },
-    { title: 'Kung Fu Panda', genre: 'Animation · Comedy', year: '2008', info: 'Expressive animation, martial-arts staging and a warm hero journey.', code: 'KFP', rating: 'Favorite' },
-    { title: 'Aladdin', genre: 'Animation · Adventure', year: '1992', info: 'Classic musical adventure with iconic character animation and visual imagination.', code: 'ALD', rating: 'Favorite' },
-    { title: 'Cars', genre: 'Animation · Comedy', year: '2006', info: 'A warm road movie with strong world-building and automotive personality.', code: 'CRS', rating: 'Favorite' },
-    { title: 'TMNT', genre: 'Action · Animation', year: '2007', info: 'Moody urban action and stylized animation built around the four turtles.', code: 'TMN', rating: 'Favorite' }
+    {
+      title: 'TMNT', genre: 'Action · Animation', year: '2007', info: 'Moody urban action and stylized animation built around the four turtles.', code: 'TMNT', rating: 'Favorite',
+      cover: 'https://www.thetechnodrome.com/images/albums/TMNT_Movie/TMNT_RatedOneSheet.jpg',
+      coverAlt: 'TMNT 2007 original theatrical poster'
+    },
+    {
+      title: 'Barnyard', genre: 'Animation · Comedy', year: '2006', info: 'A playful animated comedy with a warm, chaotic farm-world personality.', code: 'BRN', rating: 'Favorite',
+      cover: 'https://cdn.cinematerial.com/p/500x/zimeucyf/barnyard-movie-poster.jpg?v=1476396967',
+      coverAlt: 'Barnyard 2006 original theatrical poster'
+    },
+    {
+      title: 'Cars', genre: 'Animation · Comedy', year: '2006', info: 'A warm road movie with strong world-building and automotive personality.', code: 'CRS', rating: 'Favorite',
+      cover: 'https://artofthemovies.co.uk/cdn/shop/files/cars_advance_cast_style_EB24514_B_c2d2fb39-ed0b-4740-aaee-f34db58f7bf3.jpg?v=1708164812',
+      coverAlt: 'Cars 2006 original theatrical poster'
+    },
+    {
+      title: 'The Incredibles', genre: 'Animation · Action', year: '2004', info: 'Stylish superhero filmmaking with exceptional visual storytelling and family dynamics.', code: 'INC', rating: 'Favorite',
+      cover: 'https://www.originalfilmart.com/cdn/shop/products/incredibles_2004_advance_original_film_art_5000x.jpg?v=1580632748',
+      coverAlt: 'The Incredibles 2004 original theatrical poster'
+    },
+    {
+      title: 'Kung Fu Panda', genre: 'Animation · Comedy', year: '2008', info: 'Expressive animation, martial-arts staging and a warm hero journey.', code: 'KFP', rating: 'Favorite',
+      cover: 'https://farm6.staticflickr.com/5582/14406753357_eb2b977aee_o.jpg',
+      coverAlt: 'Kung Fu Panda 2008 original theatrical poster'
+    }
   ]
 };
