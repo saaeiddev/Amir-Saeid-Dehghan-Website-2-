@@ -401,5 +401,4 @@
   renderDock();
   updateClock();
   setInterval(updateClock, 30000);
-  setTimeout(() => openWindow('projects'), 360);
 })();
