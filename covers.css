@@ -1,0 +1,88 @@
+/* Original cover-art presentation for Music, Games and Movies */
+.has-real-cover {
+  position: relative;
+  overflow: hidden !important;
+  isolation: isolate;
+  background: linear-gradient(145deg, rgba(255,255,255,.12), rgba(3,8,18,.52)) !important;
+  box-shadow: 0 16px 38px rgba(0,0,0,.30), inset 0 0 0 1px rgba(255,255,255,.13) !important;
+}
+.has-real-cover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  border-radius: inherit;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.22), inset 0 -1px 0 rgba(0,0,0,.18);
+}
+.has-real-cover > img {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center;
+  transform: translateZ(0) scale(1.002);
+  transition: transform .34s cubic-bezier(.2,.8,.2,1), filter .28s ease;
+}
+.cover-fallback {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: grid;
+  place-items: center;
+  padding: 12px;
+  text-align: center;
+  font-weight: 750;
+  letter-spacing: -.02em;
+  color: rgba(255,255,255,.78);
+}
+.cover-failed > img { display: none; }
+
+.big-album.has-real-cover {
+  width: min(190px, 100%);
+  height: auto;
+  aspect-ratio: 1 / 1;
+  margin-inline: auto;
+  border-radius: 22px;
+}
+.album-thumb.has-real-cover {
+  width: 52px;
+  min-width: 52px;
+  height: 52px;
+  border-radius: 11px;
+  filter: none !important;
+}
+.media-cover.has-real-cover {
+  aspect-ratio: 2 / 3;
+  min-height: 238px;
+  border-radius: 18px;
+  background: rgba(5,10,20,.32) !important;
+}
+.media-item:hover .media-cover.has-real-cover > img,
+.media-button:hover .media-cover.has-real-cover > img {
+  transform: scale(1.025);
+  filter: saturate(1.04) contrast(1.02);
+}
+.media-cover.has-real-cover .media-code { display: none !important; }
+
+.detail-hero.has-real-cover {
+  width: min(250px, 68vw);
+  height: auto;
+  aspect-ratio: 2 / 3;
+  margin: 0 auto 18px;
+  border-radius: 20px;
+  color: transparent;
+}
+.detail-hero.has-real-cover > img { object-fit: cover; }
+
+@media (max-width: 820px) {
+  .media-cover.has-real-cover { min-height: 210px; }
+  .big-album.has-real-cover { width: 162px; }
+}
+@media (max-width: 430px) {
+  .media-cover.has-real-cover { min-height: 190px; border-radius: 15px; }
+  .album-thumb.has-real-cover { width: 48px; min-width: 48px; height: 48px; }
+}
