@@ -1,11 +1,14 @@
 (() => {
   'use strict';
 
+  if (window.COVER_ENHANCER) return;
+
   const DATA = window.PORTFOLIO_DATA;
   if (!DATA) return;
 
   function applyCover(host, item, mode = 'cover') {
     if (!host || !item?.cover || host.dataset.coverApplied === 'true') return;
+
     host.dataset.coverApplied = 'true';
     host.classList.add('has-real-cover');
 
@@ -27,6 +30,7 @@
   function enhanceMusic(win) {
     const featured = DATA.music?.[0];
     applyCover(win.querySelector('.big-album'), featured, 'featured');
+
     win.querySelectorAll('.track').forEach((track, index) => {
       applyCover(track.querySelector('.album-thumb'), DATA.music?.[index]);
       const time = track.querySelector('time');
@@ -42,6 +46,7 @@
 
   function enhanceWindow(win) {
     if (!(win instanceof Element)) return;
+
     const id = win.dataset.window;
     if (id === 'music') enhanceMusic(win);
     if (id === 'games') enhanceMediaWindow(win, DATA.games);
@@ -51,18 +56,32 @@
   function enhanceDetail() {
     const card = document.getElementById('detail-card');
     if (!card || !card.children.length) return;
+
     const title = card.querySelector('h2')?.textContent?.trim();
     if (!title) return;
-    const movie = DATA.movies?.find(item => item.title === title);
+
+    const movie = DATA.movies?.find((item) => item.title === title);
     if (movie) applyCover(card.querySelector('.detail-hero'), movie, 'featured');
   }
 
-  function enhanceAll() {
+  function enhanceExisting() {
     document.querySelectorAll('.finder-window').forEach(enhanceWindow);
     enhanceDetail();
   }
 
-  const observer = new MutationObserver(() => requestAnimationFrame(enhanceAll));
-  observer.observe(document.body, { childList: true, subtree: true });
-  enhanceAll();
+  document.addEventListener('click', (event) => {
+    if (event.target.closest('[data-movie]')) {
+      if (typeof queueMicrotask === 'function') queueMicrotask(enhanceDetail);
+      else Promise.resolve().then(enhanceDetail);
+    }
+  });
+
+  window.COVER_ENHANCER = Object.freeze({
+    applyCover,
+    enhanceWindow,
+    enhanceDetail,
+    enhanceExisting
+  });
+
+  enhanceExisting();
 })();

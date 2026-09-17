@@ -1,6 +1,9 @@
 (() => {
   'use strict';
 
+  if (window.__MACOS27_GOLDEN_GATE_INITIALIZED__) return;
+  window.__MACOS27_GOLDEN_GATE_INITIALIZED__ = true;
+
   const DATA = window.PORTFOLIO_DATA;
   if (!DATA) return;
 
@@ -13,6 +16,7 @@
       wifi: '<path d="M4 9.5c4.8-4 11.2-4 16 0M7 13c3-2.5 7-2.5 10 0M10.2 16.4c1.1-.8 2.5-.8 3.6 0M12 19h.01"/>',
       bluetooth: '<path d="m8 7 8 10V7L8 17l8-10"/>',
       moon: '<path d="M19 15.5A7 7 0 0 1 8.5 5 7.5 7.5 0 1 0 19 15.5Z"/>',
+      airdrop: '<path d="M6.2 9.2a8.2 8.2 0 0 1 11.6 0M8.8 11.9a4.5 4.5 0 0 1 6.4 0M12 15.1h.01"/><path d="m9.2 17.6 2.8-4.8 2.8 4.8Z"/>',
       sun: '<circle cx="12" cy="12" r="3.5"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
       sound: '<path d="M5 10v4h4l4 3V7l-4 3H5Zm11-1.5a5 5 0 0 1 0 7"/>',
       folder: '<path d="M3 7h7l2 2h9v10H3z"/>',
@@ -24,6 +28,11 @@
       movies: '<rect x="4" y="5" width="16" height="14" rx="3"/><path d="M4 9h16M8 5l2 4M14 5l2 4"/>'
     };
     return `<svg viewBox="0 0 24 24" aria-hidden="true">${paths[name] || paths.folder}</svg>`;
+  };
+
+  const defer = (callback) => {
+    if (typeof queueMicrotask === 'function') queueMicrotask(callback);
+    else Promise.resolve().then(callback);
   };
 
   function openFolder(id) {
@@ -38,14 +47,14 @@
     sidebar.setAttribute('aria-label', 'Finder sidebar');
 
     const favoriteItems = [
-      ['projects', 'Projects', '#0a84ff'],
-      ['photos', 'Photos', '#ff453a'],
-      ['music', 'Music', '#ff375f'],
-      ['books', 'Books', '#ff9f0a']
+      ['projects', 'Projects', '#5aa7ff'],
+      ['photos', 'Photos', '#ff6b6b'],
+      ['music', 'Music', '#ff5f7f'],
+      ['books', 'Books', '#f4a340']
     ];
     const mediaItems = [
-      ['games', 'Games', '#5e5ce6'],
-      ['movies', 'Movies', '#64d2ff']
+      ['games', 'Games', '#8b84ff'],
+      ['movies', 'Movies', '#70c9ec']
     ];
 
     const group = (label, items) => `
@@ -64,7 +73,7 @@
       `<div class="gg-sidebar-group">
         <div class="gg-sidebar-label">Locations</div>
         <button class="gg-sidebar-item" type="button" data-gg-open="projects">
-          <span class="gg-side-icon" style="--side-color:#8e8e93">${icon('folder')}</span>
+          <span class="gg-side-icon" style="--side-color:#9a9aa0">${icon('folder')}</span>
           <span>Amir’s Mac</span>
         </button>
       </div>`;
@@ -73,29 +82,41 @@
       const button = event.target.closest('[data-gg-open]');
       if (button) openFolder(button.dataset.ggOpen);
     });
+
     return sidebar;
   }
 
+  function stopToolbarDrag(event) {
+    event.stopPropagation();
+  }
+
   function upgradeWindow(win) {
-    if (!win || win.dataset.ggUpgraded === 'true') return;
-    win.dataset.ggUpgraded = 'true';
+    if (!win || win.dataset.ggUpgraded === 'true') {
+      if (win) window.COVER_ENHANCER?.enhanceWindow?.(win);
+      return;
+    }
+
     const id = win.dataset.window;
     const toolbar = win.querySelector('.window-toolbar');
     const content = win.querySelector('.window-content');
     if (!toolbar || !content) return;
 
+    win.dataset.ggUpgraded = 'true';
+
     const titleWrap = toolbar.querySelector('.window-title-wrap');
     const nav = document.createElement('div');
     nav.className = 'gg-toolbar-actions';
     nav.innerHTML = `
-      <button class="gg-toolbar-btn" type="button" aria-label="Back">${icon('chevronLeft')}</button>
-      <button class="gg-toolbar-btn" type="button" aria-label="Forward">${icon('chevronRight')}</button>`;
+      <button class="gg-toolbar-btn" type="button" aria-label="Back" disabled>${icon('chevronLeft')}</button>
+      <button class="gg-toolbar-btn" type="button" aria-label="Forward" disabled>${icon('chevronRight')}</button>`;
+    nav.addEventListener('pointerdown', stopToolbarDrag);
     toolbar.insertBefore(nav, titleWrap);
 
     const search = document.createElement('button');
     search.className = 'gg-search';
     search.type = 'button';
     search.innerHTML = `${icon('search')}<span>Search</span>`;
+    search.addEventListener('pointerdown', stopToolbarDrag);
     search.addEventListener('click', openSpotlight);
     const viewPill = toolbar.querySelector('.view-pill');
     toolbar.insertBefore(search, viewPill);
@@ -105,21 +126,25 @@
     content.parentNode.insertBefore(body, content);
     body.appendChild(buildSidebar(id));
     body.appendChild(content);
+
+    window.COVER_ENHANCER?.enhanceWindow?.(win);
   }
 
-  function observeWindows() {
-    const layer = document.getElementById('window-layer');
-    if (!layer) return;
-    layer.querySelectorAll('.finder-window').forEach(upgradeWindow);
-    new MutationObserver((records) => {
-      records.forEach((record) => {
-        record.addedNodes.forEach((node) => {
-          if (!(node instanceof HTMLElement)) return;
-          if (node.matches?.('.finder-window')) upgradeWindow(node);
-          node.querySelectorAll?.('.finder-window').forEach(upgradeWindow);
-        });
-      });
-    }).observe(layer, { childList: true, subtree: true });
+  function upgradeExistingWindows() {
+    document.querySelectorAll('.finder-window').forEach(upgradeWindow);
+  }
+
+  function scheduleWindowUpgrade(event) {
+    const target = event.target.closest(
+      '[data-open], [data-dock], [data-command], [data-gg-open], [data-spot-open]'
+    );
+    if (!target) return;
+
+    defer(upgradeExistingWindows);
+
+    if (target.matches('[data-command="open-all"]')) {
+      window.setTimeout(upgradeExistingWindows, 360);
+    }
   }
 
   function buildSystemButtons() {
@@ -128,17 +153,21 @@
     if (!right || !clock || right.querySelector('[data-gg-control]')) return;
 
     const searchButton = document.createElement('button');
-    searchButton.className = 'gg-status-button';
+    searchButton.className = 'gg-status-button gg-spotlight-trigger';
     searchButton.type = 'button';
     searchButton.setAttribute('aria-label', 'Spotlight');
     searchButton.innerHTML = icon('search');
-    searchButton.addEventListener('click', (event) => { event.stopPropagation(); openSpotlight(); });
+    searchButton.addEventListener('click', (event) => {
+      event.stopPropagation();
+      openSpotlight();
+    });
 
     const controlButton = document.createElement('button');
     controlButton.className = 'gg-status-button';
     controlButton.type = 'button';
     controlButton.dataset.ggControl = 'true';
     controlButton.setAttribute('aria-label', 'Control Center');
+    controlButton.setAttribute('aria-expanded', 'false');
     controlButton.innerHTML = icon('control');
     controlButton.addEventListener('click', (event) => {
       event.stopPropagation();
@@ -151,45 +180,62 @@
 
   function createControlCenter() {
     if (document.querySelector('.gg-control-center')) return;
+
     const panel = document.createElement('section');
     panel.className = 'gg-control-center hidden';
     panel.setAttribute('aria-label', 'Control Center');
     panel.innerHTML = `
       <div class="gg-cc-grid">
-        <div class="gg-cc-tile">
-          <div class="gg-cc-row"><span class="gg-cc-dot">${icon('wifi')}</span><div><strong>Wi-Fi</strong><small>Connected</small></div></div>
-          <div class="gg-cc-row"><span class="gg-cc-dot" style="background:#0a84ff">${icon('bluetooth')}</span><div><strong>Bluetooth</strong><small>On</small></div></div>
-        </div>
-        <div class="gg-cc-tile">
-          <div class="gg-cc-row"><span class="gg-cc-dot" style="background:#5e5ce6">${icon('moon')}</span><div><strong>Focus</strong><small>Off</small></div></div>
-          <div class="gg-cc-row"><span class="gg-cc-dot" style="background:#30d158">${icon('control')}</span><div><strong>AirDrop</strong><small>Contacts Only</small></div></div>
-        </div>
+        <button class="gg-cc-toggle enabled" type="button" aria-pressed="true">
+          <span class="gg-cc-dot">${icon('wifi')}</span>
+          <span><strong>Wi-Fi</strong><small>Connected</small></span>
+        </button>
+        <button class="gg-cc-toggle enabled" type="button" aria-pressed="true">
+          <span class="gg-cc-dot">${icon('bluetooth')}</span>
+          <span><strong>Bluetooth</strong><small>On</small></span>
+        </button>
+        <button class="gg-cc-toggle" type="button" aria-pressed="false">
+          <span class="gg-cc-dot neutral">${icon('moon')}</span>
+          <span><strong>Focus</strong><small>Off</small></span>
+        </button>
+        <button class="gg-cc-toggle enabled" type="button" aria-pressed="true">
+          <span class="gg-cc-dot">${icon('airdrop')}</span>
+          <span><strong>AirDrop</strong><small>Contacts Only</small></span>
+        </button>
       </div>
       <div class="gg-slider-card">
         <div class="gg-slider-head"><span>Display</span><span>${icon('sun')}</span></div>
-        <input class="gg-slider" data-gg-brightness type="range" min="70" max="110" value="100" aria-label="Display brightness" />
+        <input class="gg-slider" data-gg-brightness type="range" min="78" max="108" value="100" aria-label="Display brightness" />
       </div>
       <div class="gg-slider-card">
         <div class="gg-slider-head"><span>Sound</span><span>${icon('sound')}</span></div>
         <input class="gg-slider" type="range" min="0" max="100" value="62" aria-label="Sound volume" />
       </div>
-      <div class="gg-slider-card">
-        <div class="gg-slider-head"><span>Liquid Glass</span><span>Clear ↔ Tinted</span></div>
-        <input class="gg-slider" data-gg-glass type="range" min="38" max="78" value="58" aria-label="Liquid Glass opacity" />
-      </div>
       <div class="gg-cc-media">
-        <div class="gg-cc-art"></div>
+        <div class="gg-cc-art" aria-hidden="true"></div>
         <div><strong>Enter Sandman</strong><small>Metallica</small></div>
-        <div class="gg-media-controls">◀︎ ▶︎</div>
+        <div class="gg-media-controls" aria-hidden="true">◀︎　▶︎</div>
       </div>`;
+
     document.body.appendChild(panel);
 
-    panel.querySelector('[data-gg-glass]').addEventListener('input', (event) => {
-      document.documentElement.style.setProperty('--gg-glass-alpha', String(Number(event.target.value) / 100));
+    panel.querySelectorAll('.gg-cc-toggle').forEach((button) => {
+      button.addEventListener('click', () => {
+        const enabled = button.getAttribute('aria-pressed') !== 'true';
+        button.setAttribute('aria-pressed', String(enabled));
+        button.classList.toggle('enabled', enabled);
+        const small = button.querySelector('small');
+        if (small && button.querySelector('strong')?.textContent === 'Focus') {
+          small.textContent = enabled ? 'On' : 'Off';
+        }
+      });
     });
+
     panel.querySelector('[data-gg-brightness]').addEventListener('input', (event) => {
-      const value = Number(event.target.value) / 100;
-      document.querySelector('.wallpaper').style.filter = `brightness(${value})`;
+      document.documentElement.style.setProperty(
+        '--gg-wallpaper-brightness',
+        String(Number(event.target.value) / 100)
+      );
     });
   }
 
@@ -197,14 +243,23 @@
     const panel = document.querySelector('.gg-control-center');
     const button = document.querySelector('[data-gg-control]');
     if (!panel) return;
-    const shouldOpen = typeof force === 'boolean' ? force : panel.classList.contains('hidden');
+
+    const shouldOpen = typeof force === 'boolean'
+      ? force
+      : panel.classList.contains('hidden');
+
     panel.classList.toggle('hidden', !shouldOpen);
     button?.classList.toggle('active', shouldOpen);
+    button?.setAttribute('aria-expanded', String(shouldOpen));
+
     if (shouldOpen) closeSpotlight();
   }
 
+  let spotlightIndex = 0;
+
   function createSpotlight() {
     if (document.querySelector('.gg-spotlight')) return;
+
     const overlay = document.createElement('section');
     overlay.className = 'gg-spotlight hidden';
     overlay.setAttribute('role', 'dialog');
@@ -212,12 +267,35 @@
     overlay.innerHTML = `
       <div class="gg-spot-input-wrap">
         ${icon('search')}
-        <input class="gg-spot-input" type="search" autocomplete="off" placeholder="Search or Ask" aria-label="Search folders" />
+        <input class="gg-spot-input" type="search" autocomplete="off" placeholder="Search" aria-label="Search folders" />
       </div>
-      <div class="gg-spot-results"></div>`;
+      <div class="gg-spot-results" role="listbox" aria-label="Search results"></div>`;
+
     document.body.appendChild(overlay);
+
     const input = overlay.querySelector('.gg-spot-input');
-    input.addEventListener('input', () => renderSpotlightResults(input.value));
+    input.addEventListener('input', () => {
+      spotlightIndex = 0;
+      renderSpotlightResults(input.value);
+    });
+
+    input.addEventListener('keydown', (event) => {
+      const items = [...overlay.querySelectorAll('.gg-spot-result')];
+      if (!items.length) return;
+
+      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        event.preventDefault();
+        const delta = event.key === 'ArrowDown' ? 1 : -1;
+        spotlightIndex = (spotlightIndex + delta + items.length) % items.length;
+        syncSpotlightSelection(items);
+      }
+
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        items[spotlightIndex]?.click();
+      }
+    });
+
     overlay.addEventListener('click', (event) => {
       const result = event.target.closest('[data-spot-open]');
       if (!result) return;
@@ -226,27 +304,49 @@
     });
   }
 
+  function syncSpotlightSelection(items = [...document.querySelectorAll('.gg-spot-result')]) {
+    items.forEach((item, index) => item.classList.toggle('active', index === spotlightIndex));
+    items[spotlightIndex]?.scrollIntoView({ block: 'nearest' });
+  }
+
   function renderSpotlightResults(query = '') {
     const results = document.querySelector('.gg-spot-results');
     if (!results) return;
+
     const q = query.trim().toLowerCase();
-    const folders = DATA.folders.filter((folder) => !q || folder.label.toLowerCase().includes(q) || folder.short.toLowerCase().includes(q));
+    const folders = DATA.folders.filter((folder) =>
+      !q ||
+      folder.label.toLowerCase().includes(q) ||
+      folder.short.toLowerCase().includes(q)
+    );
+
+    spotlightIndex = Math.min(spotlightIndex, Math.max(0, folders.length - 1));
+
     results.innerHTML = folders.slice(0, 6).map((folder, index) => `
-      <button class="gg-spot-result ${index === 0 ? 'active' : ''}" type="button" data-spot-open="${folder.id}">
-        <span>${icon(folder.icon)}</span>
+      <button
+        class="gg-spot-result ${index === spotlightIndex ? 'active' : ''}"
+        type="button"
+        role="option"
+        aria-selected="${index === spotlightIndex}"
+        data-spot-open="${folder.id}">
+        <span class="gg-spot-folder">${icon(folder.icon)}</span>
         <span><strong>${folder.label}</strong><small>Folder · Amir Saeid Dehghan</small></span>
-      </button>`).join('') || `<div style="padding:14px;color:rgb(255 255 255 / .5);font-size:12px">No results</div>`;
+      </button>`).join('') ||
+      `<div class="gg-spot-empty">No results</div>`;
   }
 
   function openSpotlight() {
     const overlay = document.querySelector('.gg-spotlight');
     if (!overlay) return;
+
     toggleControlCenter(false);
     overlay.classList.remove('hidden');
+    spotlightIndex = 0;
     renderSpotlightResults('');
+
     const input = overlay.querySelector('.gg-spot-input');
     input.value = '';
-    requestAnimationFrame(() => input.focus());
+    window.setTimeout(() => input.focus(), 0);
   }
 
   function closeSpotlight() {
@@ -255,25 +355,45 @@
 
   function dockMagnification() {
     const dock = document.getElementById('dock');
-    if (!dock || matchMedia('(pointer: coarse)').matches) return;
-    const apps = () => [...dock.querySelectorAll('.dock-app')];
+    if (!dock || dock.dataset.ggMagnificationBound === 'true' || matchMedia('(pointer: coarse)').matches) return;
+
+    dock.dataset.ggMagnificationBound = 'true';
+
+    const reset = () => {
+      dock.querySelectorAll('.dock-app').forEach((app) => app.style.removeProperty('transform'));
+    };
+
     dock.addEventListener('pointermove', (event) => {
-      apps().forEach((app) => {
-        const rect = app.getBoundingClientRect();
-        const center = rect.left + rect.width / 2;
+      const dockRect = dock.getBoundingClientRect();
+      const apps = [...dock.querySelectorAll('.dock-app')];
+
+      apps.forEach((app) => {
+        const center = dockRect.left + app.offsetLeft + app.offsetWidth / 2;
         const distance = Math.abs(event.clientX - center);
-        const influence = Math.max(0, 1 - distance / 115);
-        const scale = 1 + influence * .27;
-        const lift = influence * 8;
+        const influence = Math.max(0, 1 - distance / 108);
+        const scale = 1 + influence * .24;
+        const lift = influence * 7.5;
         app.style.transform = `translateY(${-lift}px) scale(${scale})`;
       });
     });
-    dock.addEventListener('pointerleave', () => apps().forEach((app) => app.style.removeProperty('transform')));
+
+    dock.addEventListener('pointerleave', reset);
+    dock.addEventListener('blur', reset, true);
   }
 
+  document.addEventListener('click', scheduleWindowUpgrade, true);
+
   document.addEventListener('pointerdown', (event) => {
-    if (!event.target.closest('.gg-control-center') && !event.target.closest('[data-gg-control]')) toggleControlCenter(false);
-    if (!event.target.closest('.gg-spotlight') && !event.target.closest('.gg-search') && !event.target.closest('.gg-status-button')) closeSpotlight();
+    if (!event.target.closest('.gg-control-center') && !event.target.closest('[data-gg-control]')) {
+      toggleControlCenter(false);
+    }
+    if (
+      !event.target.closest('.gg-spotlight') &&
+      !event.target.closest('.gg-search') &&
+      !event.target.closest('.gg-spotlight-trigger')
+    ) {
+      closeSpotlight();
+    }
   });
 
   document.addEventListener('keydown', (event) => {
@@ -290,6 +410,13 @@
   buildSystemButtons();
   createControlCenter();
   createSpotlight();
-  observeWindows();
+  upgradeExistingWindows();
   dockMagnification();
+
+  window.MACOS27 = Object.freeze({
+    upgradeWindow,
+    upgradeExistingWindows,
+    openSpotlight,
+    closeSpotlight
+  });
 })();
