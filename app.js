@@ -375,7 +375,7 @@
       .at(-1);
 
     const showSystemSheet = (title, message) => {
-      detailCard.innerHTML = `<button class="detail-close" type="button" aria-label="Close details">×</button><div class="detail-hero gg-system-hero"></div><h2>${title}</h2><p>${message}</p>`;
+      detailCard.innerHTML = `<button class="detail-close" type="button" aria-label="Close details">×</button><div class="detail-hero gg-system-hero" aria-hidden="true"><svg class="apple-symbol" viewBox="0 0 20 24" aria-hidden="true"><path fill="currentColor" d="M15.5 12.7c0-2.2 1.8-3.3 1.9-3.3-1-1.5-2.6-1.7-3.2-1.7-1.4-.1-2.7.8-3.4.8s-1.8-.8-3-.8c-1.5 0-2.9.9-3.7 2.2-1.6 2.8-.4 6.9 1.1 9.2.8 1.1 1.7 2.4 2.9 2.3 1.2 0 1.7-.8 3.1-.8 1.5 0 1.9.8 3.1.8 1.3 0 2.1-1.1 2.8-2.3.9-1.3 1.3-2.6 1.3-2.7-.1 0-2.9-1.1-2.9-3.7Z"/><path fill="currentColor" d="M13.3 5.7c.6-.8 1-1.8.9-2.7-.9 0-1.9.6-2.6 1.3-.6.7-1.1 1.7-1 2.6 1 0 2-.5 2.7-1.2Z"/></svg></div><h2>${title}</h2><p>${message}</p>`;
       detailViewer.classList.remove('hidden');
       detailCard.querySelector('.detail-close')?.focus();
     };

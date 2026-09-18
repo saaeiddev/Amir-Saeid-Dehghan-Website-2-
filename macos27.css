@@ -548,3 +548,9 @@ html,body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Dis
     background:rgb(43 44 49/.96)!important;
   }
 }
+
+/* APPLE SYMBOL CROSS-PLATFORM
+   Inline vector prevents the private-use Apple glyph from rendering as a missing-character square off macOS. */
+.apple-mark{display:grid;place-items:center;min-width:25px}
+.apple-symbol{display:block;width:13.5px;height:16px;overflow:visible;fill:currentColor}
+.gg-system-hero .apple-symbol{width:72px;height:82px}
