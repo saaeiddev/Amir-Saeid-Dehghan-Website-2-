@@ -54,10 +54,10 @@ window.PORTFOLIO_DATA = {
       coverAlt: 'Bully original PlayStation 2 box art'
     },
     {
-      title: 'Rayman', platform: 'PlayStation', year: '1995',
-      description: 'The original Rayman — expressive platforming, playful animation and iconic art direction.', code: 'RAY',
-      cover: 'https://images.launchbox-app.com/86976da1-a3e4-467c-991d-9f62edc6f39e.png',
-      coverAlt: 'Rayman original PlayStation box art'
+      title: 'Rayman Raving Rabbids', platform: 'PC / Wii / PS2 / Xbox 360', year: '2006',
+      description: 'Rayman’s chaotic party-game adventure packed with wild Rabbids, quirky trials and playful humor.', code: 'RRR',
+      cover: 'https://images.gog-statics.com/fba1a44a51f1cae0f4db2ac87c18d5e21181d90ac8fca1db00ac8cfce5bb5ee2_product_card_v2_mobile_slider_639.jpg',
+      coverAlt: 'Rayman Raving Rabbids official cover art'
     },
     {
       title: 'Max Payne 2: The Fall of Max Payne', platform: 'PC / PS2 / Xbox', year: '2003',
@@ -68,13 +68,13 @@ window.PORTFOLIO_DATA = {
     {
       title: 'Resident Evil Requiem', platform: 'PC / PS5 / Xbox Series X|S', year: '2026',
       description: 'The ninth main Resident Evil installment — cinematic survival horror built with Capcom’s RE ENGINE.', code: 'RE9',
-      cover: 'https://www.gameresource.nl/media/catalog/product/cache/1/image/800x/17f82f742ffe127f42dca9de82fb58b1/r/e/resident-evil-9-requiem-ps5.jpg',
+      cover: 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/3764200/library_600x900_2x.jpg',
       coverAlt: 'Resident Evil Requiem official PlayStation 5 cover art'
     },
     {
       title: 'Evil West', platform: 'PC / PS4 / PS5 / Xbox One / Xbox Series X|S', year: '2022',
       description: 'A supernatural Weird West action adventure about hunting vampires with firearms, gadgets and an electrified gauntlet.', code: 'EVW',
-      cover: 'https://cdn.dsmcdn.com/ty657/product/media/images/20221222/15/242346870/659788180/1/1_org_zoom.jpg',
+      cover: 'https://media.gamestop.com/i/gamestop/11208363',
       coverAlt: 'Evil West official PlayStation 5 cover art'
     }
   ],
