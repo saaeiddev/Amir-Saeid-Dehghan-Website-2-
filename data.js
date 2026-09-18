@@ -50,25 +50,25 @@ window.PORTFOLIO_DATA = {
     {
       title: 'Bully', platform: 'PlayStation 2', year: '2006',
       description: 'Rockstar’s open-world school-life action adventure and one of my favorite classics.', code: 'BLY',
-      cover: 'https://i.ebayimg.com/images/g/ZP4AAeSwu~Jn4pIf/s-l400.jpg',
+      cover: 'https://upload.wikimedia.org/wikipedia/en/b/b3/Bullyboxart.jpg',
       coverAlt: 'Bully original PlayStation 2 box art'
     },
     {
       title: 'Rayman Raving Rabbids', platform: 'PC / Wii / PS2 / Xbox 360', year: '2006',
       description: 'Rayman’s chaotic party-game adventure packed with wild Rabbids, quirky trials and playful humor.', code: 'RRR',
-      cover: 'https://images.gog-statics.com/fba1a44a51f1cae0f4db2ac87c18d5e21181d90ac8fca1db00ac8cfce5bb5ee2_product_card_v2_mobile_slider_639.jpg',
+      cover: 'https://upload.wikimedia.org/wikipedia/en/7/75/Rayman_Raving_Rabbids.jpg',
       coverAlt: 'Rayman Raving Rabbids official cover art'
     },
     {
       title: 'Max Payne 2: The Fall of Max Payne', platform: 'PC / PS2 / Xbox', year: '2003',
       description: 'A film-noir action classic with a dark cinematic atmosphere and memorable storytelling.', code: 'MP2',
-      cover: 'https://www.mobygames.com/images/covers/l/232083-max-payne-2-the-fall-of-max-payne-windows-front-cover.jpg',
+      cover: 'https://upload.wikimedia.org/wikipedia/en/9/95/Max_Payne_2.jpg',
       coverAlt: 'Max Payne 2 The Fall of Max Payne original PC box art'
     },
     {
       title: 'Resident Evil Requiem', platform: 'PC / PS5 / Xbox Series X|S', year: '2026',
       description: 'The ninth main Resident Evil installment — cinematic survival horror built with Capcom’s RE ENGINE.', code: 'RE9',
-      cover: 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/3764200/library_600x900_2x.jpg',
+      cover: 'https://upload.wikimedia.org/wikipedia/en/7/71/Resident_Evil_Requiem_cover_art.jpg',
       coverAlt: 'Resident Evil Requiem official PlayStation 5 cover art'
     },
     {
