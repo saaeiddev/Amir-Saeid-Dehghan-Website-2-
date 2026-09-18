@@ -64,6 +64,18 @@ window.PORTFOLIO_DATA = {
       description: 'A film-noir action classic with a dark cinematic atmosphere and memorable storytelling.', code: 'MP2',
       cover: 'https://www.mobygames.com/images/covers/l/232083-max-payne-2-the-fall-of-max-payne-windows-front-cover.jpg',
       coverAlt: 'Max Payne 2 The Fall of Max Payne original PC box art'
+    },
+    {
+      title: 'Resident Evil Requiem', platform: 'PC / PS5 / Xbox Series X|S', year: '2026',
+      description: 'The ninth main Resident Evil installment — cinematic survival horror built with Capcom’s RE ENGINE.', code: 'RE9',
+      cover: 'https://www.gameresource.nl/media/catalog/product/cache/1/image/800x/17f82f742ffe127f42dca9de82fb58b1/r/e/resident-evil-9-requiem-ps5.jpg',
+      coverAlt: 'Resident Evil Requiem official PlayStation 5 cover art'
+    },
+    {
+      title: 'Evil West', platform: 'PC / PS4 / PS5 / Xbox One / Xbox Series X|S', year: '2022',
+      description: 'A supernatural Weird West action adventure about hunting vampires with firearms, gadgets and an electrified gauntlet.', code: 'EVW',
+      cover: 'https://cdn.dsmcdn.com/ty657/product/media/images/20221222/15/242346870/659788180/1/1_org_zoom.jpg',
+      coverAlt: 'Evil West official PlayStation 5 cover art'
     }
   ],
   movies: [
