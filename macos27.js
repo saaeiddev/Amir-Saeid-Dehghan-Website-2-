@@ -419,3 +419,236 @@
     closeSpotlight
   });
 })();
+
+(() => {
+  'use strict';
+  if (window.MACOS27_FIDELITY_BEHAVIOR_20260918) return;
+  window.MACOS27_FIDELITY_BEHAVIOR_20260918 = true;
+
+  const DATA = window.PORTFOLIO_DATA;
+  const dock = document.getElementById('dock');
+  const desktop = document.getElementById('desktop');
+  const desktopIcons = document.getElementById('desktop-icons');
+
+  const svg = (body, viewBox = '0 0 24 24') =>
+    `<svg viewBox="${viewBox}" aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">${body}</svg>`;
+
+  const trashSVG = svg('<path d="M7 8h10l-.7 11H7.7L7 8Z"/><path d="M9 8V5.8h6V8M5 8h14M10 11v5M14 11v5"/>');
+
+  function upgradeDock() {
+    if (!dock) return;
+
+    if (!dock.querySelector('.gg-dock-separator')) {
+      const separator = document.createElement('span');
+      separator.className = 'gg-dock-separator';
+      separator.setAttribute('aria-hidden', 'true');
+      dock.appendChild(separator);
+    }
+
+    if (!dock.querySelector('[data-dock="trash"]')) {
+      const trash = document.createElement('button');
+      trash.className = 'dock-app';
+      trash.type = 'button';
+      trash.dataset.dock = 'trash';
+      trash.setAttribute('aria-label', 'Trash');
+      trash.innerHTML = `<span class="tooltip">Trash</span><span class="dock-icon">${trashSVG}</span>`;
+      trash.addEventListener('click', (event) => {
+        event.stopPropagation();
+        hideContextMenu();
+      });
+      dock.appendChild(trash);
+    }
+  }
+
+  function reorderStatusItems() {
+    const right = document.querySelector('.menu-right');
+    if (!right) return;
+    const items = [...right.children];
+    const wifi = items.find(el => el.getAttribute('aria-label')?.includes('Wi-Fi'));
+    const sound = items.find(el => el.getAttribute('aria-label')?.includes('Sound'));
+    const search = right.querySelector('.gg-spotlight-trigger');
+    const control = right.querySelector('[data-gg-control]');
+    const battery = right.querySelector('.battery');
+    const clock = document.getElementById('menu-clock');
+    [wifi, sound, search, control, battery, clock].forEach(el => el && right.appendChild(el));
+  }
+
+  function createContextMenu() {
+    if (document.querySelector('.gg-context-menu')) return;
+    const menu = document.createElement('div');
+    menu.className = 'gg-context-menu hidden';
+    menu.setAttribute('role', 'menu');
+    document.body.appendChild(menu);
+
+    const info = document.createElement('section');
+    info.className = 'gg-info-panel hidden';
+    info.setAttribute('role', 'dialog');
+    info.setAttribute('aria-modal', 'true');
+    info.setAttribute('aria-label', 'Get Info');
+    document.body.appendChild(info);
+
+    menu.addEventListener('click', (event) => {
+      const action = event.target.closest('[data-gg-context]')?.dataset.ggContext;
+      if (!action) return;
+      const id = menu.dataset.folderId;
+
+      if (action === 'open' && id) {
+        document.querySelector(`[data-dock="${id}"]`)?.click();
+      } else if (action === 'info' && id) {
+        showInfo(id);
+      } else if (action === 'show-desktop') {
+        document.querySelector('[data-menu="view"]')?.click();
+        const cmd = document.querySelector('[data-command="show-desktop"]');
+        cmd?.click();
+      } else if (action === 'view-options') {
+        showInfo(null, 'Desktop View Options', 'Icon size: 73 px', 'Grid spacing: macOS-style');
+      }
+
+      hideContextMenu();
+    });
+  }
+
+  function showInfo(id, titleOverride, kindOverride, detailOverride) {
+    const panel = document.querySelector('.gg-info-panel');
+    if (!panel) return;
+    const folder = DATA?.folders?.find(item => item.id === id);
+    const title = titleOverride || folder?.label || 'Desktop';
+    const kind = kindOverride || 'Folder';
+    const detail = detailOverride || 'Amir Saeid Dehghan — Personal Desktop';
+
+    panel.innerHTML = `
+      <button class="gg-info-close" type="button" aria-label="Close Get Info">×</button>
+      <div class="gg-info-head">
+        <span class="gg-info-folder" aria-hidden="true"></span>
+        <div><h3>${title}</h3><p>${kind}</p></div>
+      </div>
+      <div class="gg-info-row"><span>Kind</span><span>${kind}</span></div>
+      <div class="gg-info-row"><span>Where</span><span>Personal Desktop</span></div>
+      <div class="gg-info-row"><span>Owner</span><span>Amir Saeid Dehghan</span></div>
+      <div class="gg-info-row"><span>Details</span><span>${detail}</span></div>`;
+    panel.classList.remove('hidden');
+    panel.querySelector('.gg-info-close')?.addEventListener('click', () => panel.classList.add('hidden'), { once: true });
+    panel.querySelector('.gg-info-close')?.focus();
+  }
+
+  function showContextMenu(event, folderId) {
+    const menu = document.querySelector('.gg-context-menu');
+    if (!menu) return;
+    menu.dataset.folderId = folderId || '';
+
+    if (folderId) {
+      menu.innerHTML = `
+        <button type="button" role="menuitem" data-gg-context="open"><span>Open</span><kbd>⌘O</kbd></button>
+        <button type="button" role="menuitem" data-gg-context="info"><span>Get Info</span><kbd>⌘I</kbd></button>
+        <div class="separator"></div>
+        <button type="button" role="menuitem" disabled>Rename</button>
+        <button type="button" role="menuitem" disabled>Quick Look</button>
+        <div class="separator"></div>
+        <button type="button" role="menuitem" data-gg-context="view-options">Show View Options</button>`;
+    } else {
+      menu.innerHTML = `
+        <button type="button" role="menuitem" data-gg-context="show-desktop">Show Desktop</button>
+        <div class="separator"></div>
+        <button type="button" role="menuitem" disabled>Sort By</button>
+        <button type="button" role="menuitem" disabled>Clean Up</button>
+        <div class="separator"></div>
+        <button type="button" role="menuitem" data-gg-context="view-options">Show View Options</button>`;
+    }
+
+    menu.classList.remove('hidden');
+    const rect = menu.getBoundingClientRect();
+    const x = Math.min(event.clientX, window.innerWidth - rect.width - 6);
+    const y = Math.min(event.clientY, window.innerHeight - rect.height - 8);
+    menu.style.left = `${Math.max(6, x)}px`;
+    menu.style.top = `${Math.max(34, y)}px`;
+  }
+
+  function hideContextMenu() {
+    document.querySelector('.gg-context-menu')?.classList.add('hidden');
+  }
+
+  function bindContextMenu() {
+    document.addEventListener('contextmenu', (event) => {
+      const icon = event.target.closest('.desktop-icon');
+      const onDesktop = event.target.closest('#desktop');
+
+      if (!icon && !onDesktop) return;
+      event.preventDefault();
+
+      if (icon) {
+        desktopIcons?.querySelectorAll('.desktop-icon.selected').forEach(el => el.classList.remove('selected'));
+        icon.classList.add('selected');
+        showContextMenu(event, icon.dataset.open);
+      } else {
+        showContextMenu(event, null);
+      }
+    });
+
+    document.addEventListener('pointerdown', (event) => {
+      if (!event.target.closest('.gg-context-menu')) hideContextMenu();
+      if (!event.target.closest('.gg-info-panel') && !event.target.closest('[data-gg-context="info"]')) {
+        document.querySelector('.gg-info-panel')?.classList.add('hidden');
+      }
+    });
+  }
+
+  function bindMinimizeTargeting() {
+    document.addEventListener('pointerdown', (event) => {
+      const min = event.target.closest('.traffic.min');
+      if (!min) return;
+      const win = min.closest('.finder-window');
+      if (!win) return;
+      const id = win.dataset.window;
+      const dockItem = dock?.querySelector(`[data-dock="${id}"]`);
+      if (!dockItem) return;
+
+      const wr = win.getBoundingClientRect();
+      const dr = dockItem.getBoundingClientRect();
+      win.style.setProperty('--gg-min-x', `${dr.left + dr.width / 2 - (wr.left + wr.width / 2)}px`);
+      win.style.setProperty('--gg-min-y', `${dr.top + dr.height / 2 - (wr.top + wr.height / 2)}px`);
+    }, true);
+  }
+
+  function observeFinderWindows() {
+    const layer = document.getElementById('window-layer');
+    if (!layer || typeof MutationObserver !== 'function') return;
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        mutation.addedNodes.forEach(node => {
+          if (!(node instanceof Element)) return;
+          if (node.matches('.finder-window')) window.MACOS27?.upgradeWindow?.(node);
+          node.querySelectorAll?.('.finder-window').forEach(win => window.MACOS27?.upgradeWindow?.(win));
+        });
+      }
+    });
+    observer.observe(layer, { childList: true, subtree: true });
+  }
+
+  function bindDesktopKeyboardOpen() {
+    desktopIcons?.addEventListener('keydown', (event) => {
+      const icon = event.target.closest('.desktop-icon');
+      if (!icon) return;
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        document.querySelector(`[data-dock="${icon.dataset.open}"]`)?.click();
+      }
+    });
+  }
+
+  function init() {
+    upgradeDock();
+    reorderStatusItems();
+    createContextMenu();
+    bindContextMenu();
+    bindMinimizeTargeting();
+    observeFinderWindows();
+    bindDesktopKeyboardOpen();
+
+    // Double-click creation occurs after the original click listener; this pass
+    // catches any window that appears from a double-click immediately.
+    document.addEventListener('dblclick', () => queueMicrotask(() => window.MACOS27?.upgradeExistingWindows?.()));
+    window.MACOS27?.upgradeExistingWindows?.();
+  }
+
+  init();
+})();

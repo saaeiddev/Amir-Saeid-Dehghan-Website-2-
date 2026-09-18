@@ -47,6 +47,14 @@
       if (selectedDesktopIcon) selectedDesktopIcon.classList.remove('selected');
       button.classList.add('selected');
       selectedDesktopIcon = button;
+
+      const coarsePointer = window.matchMedia('(pointer: coarse)').matches || window.innerWidth <= 820;
+      if (coarsePointer) openWindow(button.dataset.open);
+    });
+
+    desktopIcons.addEventListener('dblclick', (event) => {
+      const button = event.target.closest('[data-open]');
+      if (!button || window.matchMedia('(pointer: coarse)').matches) return;
       openWindow(button.dataset.open);
     });
 
@@ -328,12 +336,13 @@
   }
 
   const menuMap = {
-    apple: [['About This Desktop', 'about'], ['System-inspired interface', null], ['separator'], ['Close All Windows', 'close-all']],
+    apple: [['About This Portfolio', 'about'], ['System Settings…', 'system-settings'], ['separator'], ['Recent Items', 'recent-items'], ['separator'], ['Sleep', 'sleep'], ['Restart…', 'restart'], ['Shut Down…', 'shutdown']],
     owner: [['Amir Saeid Dehghan', null], ['Creative Technology Portfolio', null], ['separator'], ['Open Projects', 'projects']],
-    file: [['New Projects Window', 'projects'], ['Open Photos', 'photos'], ['separator'], ['Close All Windows', 'close-all']],
+    file: [['New Finder Window', 'projects'], ['Open Photos', 'photos'], ['separator'], ['Close Window', 'close-front'], ['Close All Windows', 'close-all']],
+    edit: [['Undo', null], ['separator'], ['Cut', null], ['Copy', null], ['Paste', null], ['separator'], ['Select All', null]],
     view: [['Show Desktop', 'show-desktop'], ['Open All Folders', 'open-all']],
-    window: [['Minimize Front Window', 'min-front'], ['Bring All to Front', 'bring-front']],
-    help: [['Portfolio Help', 'about'], ['Keyboard: Tab, Enter, Esc', null]]
+    window: [['Minimize', 'min-front'], ['Zoom', 'zoom-front'], ['separator'], ['Bring All to Front', 'bring-front']],
+    help: [['Portfolio Help', 'about'], ['Keyboard: ⌘W, ⌘M, ⌘Space, Esc', null]]
   };
 
   document.querySelector('.menu-left').addEventListener('click', (event) => {
@@ -359,6 +368,30 @@
 
   function runCommand(command) {
     if (DATA.folders.some(f => f.id === command)) return openWindow(command);
+
+    const frontEntry = () => [...windows.entries()]
+      .filter(([, state]) => !state.minimized)
+      .sort((a, b) => Number(a[1].el.style.zIndex || 0) - Number(b[1].el.style.zIndex || 0))
+      .at(-1);
+
+    const showSystemSheet = (title, message) => {
+      detailCard.innerHTML = `<button class="detail-close" type="button" aria-label="Close details">×</button><div class="detail-hero gg-system-hero"></div><h2>${title}</h2><p>${message}</p>`;
+      detailViewer.classList.remove('hidden');
+      detailCard.querySelector('.detail-close')?.focus();
+    };
+    if (command === 'close-front') {
+      const front = frontEntry();
+      if (front) closeWindow(front[0]);
+    }
+    if (command === 'zoom-front') {
+      const front = frontEntry();
+      if (front) toggleMaximize(front[0]);
+    }
+    if (command === 'system-settings') showSystemSheet('System Settings', 'This is a browser-based portfolio, so system settings are represented visually rather than changing your Mac.');
+    if (command === 'recent-items') showSystemSheet('Recent Items', 'Your portfolio folders and projects remain available from the desktop, Finder sidebar, Dock and Spotlight.');
+    if (command === 'sleep') showSystemSheet('Sleep', 'Sleep is simulated here. Closing this panel returns you to the portfolio desktop.');
+    if (command === 'restart') showSystemSheet('Restart', 'Restart is simulated in the browser; your portfolio content and window state are not modified.');
+    if (command === 'shutdown') showSystemSheet('Shut Down', 'Shut Down is simulated and never closes the visitor’s real browser or device.');
     if (command === 'close-all') [...windows.keys()].forEach(closeWindow);
     if (command === 'show-desktop') [...windows.keys()].forEach(minimizeWindow);
     if (command === 'open-all') DATA.folders.forEach((f,i) => setTimeout(() => openWindow(f.id), i * 45));
@@ -391,6 +424,23 @@
     }
     if (!photoViewer.classList.contains('hidden') && event.key === 'ArrowLeft') changePhoto(-1);
     if (!photoViewer.classList.contains('hidden') && event.key === 'ArrowRight') changePhoto(1);
+
+    if ((event.metaKey || event.ctrlKey) && !event.altKey) {
+      const key = event.key.toLowerCase();
+      const front = [...windows.entries()]
+        .filter(([, state]) => !state.minimized)
+        .sort((a, b) => Number(a[1].el.style.zIndex || 0) - Number(b[1].el.style.zIndex || 0))
+        .at(-1);
+
+      if (key === 'w' && front) {
+        event.preventDefault();
+        closeWindow(front[0]);
+      }
+      if (key === 'm' && front) {
+        event.preventDefault();
+        minimizeWindow(front[0]);
+      }
+    }
   });
 
   window.addEventListener('resize', () => {
