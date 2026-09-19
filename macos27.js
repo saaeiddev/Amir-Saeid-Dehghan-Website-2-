@@ -109,6 +109,7 @@
     const search = document.createElement('button');
     search.className = 'gg-search';
     search.type = 'button';
+    search.setAttribute('aria-label', 'Search portfolio');
     search.innerHTML = `${icon('search')}<span>Search</span>`;
     search.addEventListener('pointerdown', stopToolbarDrag);
     search.addEventListener('click', openSpotlight);

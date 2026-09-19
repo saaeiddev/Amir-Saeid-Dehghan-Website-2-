@@ -326,7 +326,7 @@
   function renderPhoto() {
     const photo = DATA.photos[photoIndex];
     viewerImage.className = photo.src;
-    viewerImage.removeAttribute('src');
+    viewerImage.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="4" height="3"/%3E';
     viewerImage.alt = photo.title;
     const tile = document.querySelector(`.${photo.src}`);
     if (tile) viewerImage.style.background = getComputedStyle(tile).getPropertyValue('--photo-bg');

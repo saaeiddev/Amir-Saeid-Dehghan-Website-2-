@@ -6,6 +6,14 @@
   const DATA = window.PORTFOLIO_DATA;
   if (!DATA) return;
 
+  // Resolve moved artwork without rewriting the portfolio's source content.
+  const verifiedArtwork = {
+    BLY: 'https://thumb.wikimedia.org/wikipedia/en/thumb/6/63/Bully_frontcover.jpg/250px-Bully_frontcover.jpg',
+    RRR: 'https://thumb.wikimedia.org/wikipedia/en/thumb/a/ac/Rrr-wii-cover.jpg/250px-Rrr-wii-cover.jpg',
+    MP2: 'https://thumb.wikimedia.org/wikipedia/en/thumb/2/21/Max_Payne_2.jpg/250px-Max_Payne_2.jpg',
+    RE9: 'https://thumb.wikimedia.org/wikipedia/en/thumb/1/15/Resident_Evil_Requiem_Cover_Art.jpg/250px-Resident_Evil_Requiem_Cover_Art.jpg'
+  };
+
   function applyCover(host, item, mode = 'cover') {
     if (!host || !item?.cover || host.dataset.coverApplied === 'true') return;
 
@@ -17,12 +25,15 @@
     fallback.textContent = item.code || item.title || 'Cover';
 
     const img = document.createElement('img');
-    img.src = item.cover;
+    img.src = verifiedArtwork[item.code] || item.cover;
     img.alt = item.coverAlt || `${item.title || 'Media'} original cover artwork`;
     img.decoding = 'async';
     img.loading = mode === 'featured' ? 'eager' : 'lazy';
     img.referrerPolicy = 'no-referrer';
-    img.addEventListener('error', () => host.classList.add('cover-failed'), { once: true });
+    img.addEventListener('error', () => {
+      host.classList.add('cover-failed');
+      fallback.textContent = item.title || 'Artwork unavailable';
+    }, { once: true });
 
     host.replaceChildren(fallback, img);
   }
