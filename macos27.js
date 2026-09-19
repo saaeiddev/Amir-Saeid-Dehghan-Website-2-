@@ -31,9 +31,8 @@
   };
 
   function openFolder(id) {
-    const dockButton = document.querySelector(`[data-dock="${id}"]`);
-    const desktopButton = document.querySelector(`[data-open="${id}"]`);
-    (dockButton || desktopButton)?.click();
+    window.DESKTOP.openWindow(id);
+    upgradeExistingWindows();
   }
 
   function buildSidebar(activeId) {
@@ -122,6 +121,7 @@
     body.appendChild(buildSidebar(id));
     body.appendChild(content);
 
+    installFinderControls(win);
     window.COVER_ENHANCER?.enhanceWindow?.(win);
   }
 
@@ -255,6 +255,7 @@
   }
 
   let spotlightIndex = 0;
+  let spotlightReturnFocus = null;
 
   function createSpotlight() {
     if (document.querySelector('.gg-spotlight')) return;
@@ -263,10 +264,11 @@
     overlay.className = 'gg-spotlight hidden';
     overlay.setAttribute('role', 'dialog');
     overlay.setAttribute('aria-label', 'Spotlight');
+    overlay.setAttribute('aria-modal', 'true');
     overlay.innerHTML = `
       <div class="gg-spot-input-wrap">
         ${icon('search')}
-        <input class="gg-spot-input" type="search" autocomplete="off" placeholder="Search" aria-label="Search folders" />
+        <input class="gg-spot-input" type="search" autocomplete="off" placeholder="Search" aria-label="Search portfolio" />
       </div>
       <div class="gg-spot-results" role="listbox" aria-label="Search results"></div>`;
 
@@ -298,13 +300,24 @@
     overlay.addEventListener('click', (event) => {
       const result = event.target.closest('[data-spot-open]');
       if (!result) return;
-      openFolder(result.dataset.spotOpen);
+      const id = result.dataset.spotOpen;
+      openFolder(id);
+      const win = document.querySelector(`[data-window="${id}"]`);
+      const item = win?.querySelectorAll('.finder-item')[Number(result.dataset.spotIndex)];
       closeSpotlight();
+      if (item) {
+        win.querySelectorAll('.finder-item').forEach(el=>el.classList.toggle('selected',el===item));
+        item.scrollIntoView({block:'center'});
+        item.focus({preventScroll:true});
+      }
     });
   }
 
   function syncSpotlightSelection(items = [...document.querySelectorAll('.gg-spot-result')]) {
-    items.forEach((item, index) => item.classList.toggle('active', index === spotlightIndex));
+    items.forEach((item, index) => {
+      item.classList.toggle('active', index === spotlightIndex);
+      item.setAttribute('aria-selected', String(index === spotlightIndex));
+    });
     items[spotlightIndex]?.scrollIntoView({ block: 'nearest' });
   }
 
@@ -313,31 +326,32 @@
     if (!results) return;
 
     const q = query.trim().toLowerCase();
-    const folders = DATA.folders.filter((folder) =>
-      !q ||
-      folder.label.toLowerCase().includes(q) ||
-      folder.short.toLowerCase().includes(q)
-    );
+    const entries = DATA.folders.flatMap(folder => [
+      {folder, title:folder.label, kind:'Folder', index:-1},
+      ...(DATA[folder.id] || []).map((item,index) => ({folder, title:item.title || item.name,
+        kind:folder.short, index, terms:Object.values(item).filter(v=>typeof v==='string').join(' ')}))
+    ]);
+    const matches = entries.filter(entry => !q ? entry.index === -1 :
+      `${entry.title} ${entry.kind} ${entry.terms || ''}`.toLowerCase().includes(q)).slice(0,18);
+    spotlightIndex = Math.min(spotlightIndex, Math.max(0,matches.length - 1));
+    results.innerHTML = matches.map((entry,index) => `
+      <button class="gg-spot-result ${index === spotlightIndex ? 'active' : ''}"
+        type="button" role="option" aria-selected="${index === spotlightIndex}"
+        data-spot-open="${entry.folder.id}" data-spot-index="${entry.index}">
+        <span class="gg-spot-folder">${icon(entry.folder.icon)}</span>
+        <span><strong>${escapeHTML(entry.title)}</strong><small>${escapeHTML(entry.kind)} · ${entry.index < 0 ? 'Amir Saeid Dehghan' : entry.folder.label}</small></span>
+      </button>`).join('') || '<div class="gg-spot-empty">No results</div>';
+  }
 
-    spotlightIndex = Math.min(spotlightIndex, Math.max(0, folders.length - 1));
-
-    results.innerHTML = folders.slice(0, 6).map((folder, index) => `
-      <button
-        class="gg-spot-result ${index === spotlightIndex ? 'active' : ''}"
-        type="button"
-        role="option"
-        aria-selected="${index === spotlightIndex}"
-        data-spot-open="${folder.id}">
-        <span class="gg-spot-folder">${icon(folder.icon)}</span>
-        <span><strong>${folder.label}</strong><small>Folder · Amir Saeid Dehghan</small></span>
-      </button>`).join('') ||
-      `<div class="gg-spot-empty">No results</div>`;
+  function escapeHTML(value) {
+    return String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
   }
 
   function openSpotlight() {
     const overlay = document.querySelector('.gg-spotlight');
     if (!overlay) return;
 
+    spotlightReturnFocus = document.activeElement;
     toggleControlCenter(false);
     overlay.classList.remove('hidden');
     spotlightIndex = 0;
@@ -349,35 +363,93 @@
   }
 
   function closeSpotlight() {
-    document.querySelector('.gg-spotlight')?.classList.add('hidden');
+    const panel = document.querySelector('.gg-spotlight');
+    if (!panel || panel.classList.contains('hidden')) return;
+    panel.classList.add('hidden');
+    if (panel.contains(document.activeElement)) spotlightReturnFocus?.focus();
   }
 
   function dockMagnification() {
     const dock = document.getElementById('dock');
-    if (!dock || dock.dataset.ggMagnificationBound === 'true' || matchMedia('(pointer: coarse)').matches) return;
-
-    dock.dataset.ggMagnificationBound = 'true';
-
+    let frame = 0, pointer = null;
     const reset = () => {
-      dock.querySelectorAll('.dock-app').forEach((app) => app.style.removeProperty('transform'));
+      pointer = null;
+      cancelAnimationFrame(frame);
+      dock.querySelectorAll('.dock-app').forEach(app => {
+        app.style.removeProperty('flex-basis');
+        app.style.removeProperty('width');
+        app.querySelector('.dock-icon').style.removeProperty('transform');
+        app.querySelector('.tooltip').style.removeProperty('bottom');
+      });
     };
-
-    dock.addEventListener('pointermove', (event) => {
-      const dockRect = dock.getBoundingClientRect();
-      const apps = [...dock.querySelectorAll('.dock-app')];
-
-      apps.forEach((app) => {
-        const center = dockRect.left + app.offsetLeft + app.offsetWidth / 2;
-        const distance = Math.abs(event.clientX - center);
-        const influence = Math.max(0, 1 - distance / 108);
-        const scale = 1 + influence * .24;
-        const lift = influence * 7.5;
-        app.style.transform = `translateY(${-lift}px) scale(${scale})`;
+    dock.addEventListener('pointermove', event => {
+      if (event.pointerType === 'touch' || innerWidth <= 820 || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      pointer = event.clientX;
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const apps = [...dock.querySelectorAll('.dock-app')];
+        const dockRect = dock.getBoundingClientRect();
+        // Stable unmagnified centers avoid a feedback loop as the shelf expands.
+        const baseWidth = apps.length * 52 + (apps.length - 1) * 3 + 25;
+        const start = dockRect.left + dockRect.width / 2 - baseWidth / 2;
+        apps.forEach((app,index) => {
+          const distance = Math.abs(pointer - (start + index * 55 + 26));
+          const influence = Math.max(0, 1 - distance / 135);
+          const scale = 1 + .42 * (1 - Math.cos(influence * Math.PI)) / 2;
+          const width = 52 * scale;
+          app.style.flexBasis = `${width}px`;
+          app.style.width = `${width}px`;
+          app.querySelector('.dock-icon').style.transform = `scale(${scale})`;
+          app.querySelector('.tooltip').style.bottom = `${52 * scale + 14}px`;
+        });
       });
     });
-
     dock.addEventListener('pointerleave', reset);
-    dock.addEventListener('blur', reset, true);
+    dock.addEventListener('focusout', reset);
+    window.addEventListener('resize', reset);
+  }
+
+  function installFinderControls(win) {
+    const content = win.querySelector('.window-content');
+    const pill = win.querySelector('.view-pill');
+    pill.removeAttribute('aria-hidden');
+    pill.setAttribute('role','group');
+    pill.setAttribute('aria-label','Finder view');
+    pill.innerHTML = `<button class="finder-view" aria-label="Icon view" aria-pressed="true" data-view="icons"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg></button><button class="finder-view" aria-label="List view" aria-pressed="false" data-view="list"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h1M3 12h1M3 18h1"/></svg></button>`;
+    pill.addEventListener('click', event => {
+      const button = event.target.closest('[data-view]');
+      if (!button) return;
+      content.dataset.view = button.dataset.view;
+      pill.querySelectorAll('button').forEach(el=>el.setAttribute('aria-pressed',String(el===button)));
+    });
+    const id = win.dataset.window;
+    const status = document.createElement('footer');
+    status.className = 'finder-status';
+    status.innerHTML = `<span>Amir’s Mac › ${DATA.folders.find(f=>f.id===id).short}</span><span>${DATA[id].length} items</span>`;
+    win.appendChild(status);
+    const items = [...content.querySelectorAll('.project-card,.media-item,.book,.photo-tile,.track')];
+    items.forEach((item,index) => {
+      item.classList.add('finder-item');
+      if (item.tagName !== 'BUTTON') item.tabIndex = 0;
+      item.dataset.finderIndex = index;
+    });
+    content.addEventListener('click', event => {
+      const item = event.target.closest('.finder-item');
+      items.forEach(el=>el.classList.toggle('selected',el===item));
+    });
+    content.addEventListener('keydown', event => {
+      const item = event.target.closest('.finder-item');
+      if (!item || event.target !== item) return;
+      if (event.key === 'Enter' && item.tagName !== 'BUTTON') {
+        item.querySelector('a,button')?.click();
+      }
+      if (event.key === 'ArrowDown' || event.key === 'ArrowRight' || event.key === 'ArrowUp' || event.key === 'ArrowLeft') {
+        event.preventDefault();
+        const next = Math.max(0,Math.min(items.length-1,items.indexOf(item) + (['ArrowDown','ArrowRight'].includes(event.key) ? 1 : -1)));
+        items[next].focus();
+        items.forEach(el=>el.classList.toggle('selected',el===items[next]));
+      }
+    });
   }
 
   document.addEventListener('click', scheduleWindowUpgrade);
@@ -401,8 +473,39 @@
       openSpotlight();
     }
     if (event.key === 'Escape') {
+      document.querySelector('.gg-context-menu')?.classList.add('hidden');
+      document.querySelector('.gg-info-panel')?.classList.add('hidden');
       toggleControlCenter(false);
       closeSpotlight();
+    }
+  });
+
+  // Arrow navigation for real menu buttons; keep modal keyboard focus contained.
+  document.addEventListener('keydown', event => {
+    const trigger = event.target.closest('.menu-trigger');
+    if (trigger && ['ArrowDown','ArrowUp'].includes(event.key)) {
+      event.preventDefault();
+      if (trigger.getAttribute('aria-expanded') !== 'true') trigger.click();
+      document.querySelector('#menu-popover button:not(:disabled)')?.focus();
+      return;
+    }
+    const menu = event.target.closest('[role=menu]');
+    if (menu && ['ArrowDown','ArrowUp','Home','End'].includes(event.key)) {
+      const entries = [...menu.querySelectorAll('button:not(:disabled)')];
+      if (!entries.length) return;
+      event.preventDefault();
+      let next = entries.indexOf(document.activeElement) + (event.key === 'ArrowUp' ? -1 : 1);
+      if (event.key === 'Home') next = 0;
+      if (event.key === 'End') next = entries.length - 1;
+      entries[(next + entries.length) % entries.length].focus();
+    }
+    if (event.key === 'Tab') {
+      const dialog = [...document.querySelectorAll('[aria-modal=true]')].find(el=>!el.classList.contains('hidden'));
+      if (!dialog) return;
+      const controls = [...dialog.querySelectorAll('button:not(:disabled), input, a[href], [tabindex="0"]')].filter(el=>el.getClientRects().length);
+      if (!controls.length) return;
+      if (event.shiftKey && (document.activeElement === controls[0] || !dialog.contains(document.activeElement))) {event.preventDefault();controls.at(-1).focus();}
+      else if (!event.shiftKey && (document.activeElement === controls.at(-1) || !dialog.contains(document.activeElement))) {event.preventDefault();controls[0].focus();}
     }
   });
 
@@ -438,6 +541,12 @@
   function upgradeDock() {
     if (!dock) return;
 
+    const artwork = {finder:'finder',music:'music',photos:'photos',projects:'safari',books:'books',games:'folder',movies:'movies'};
+    dock.querySelectorAll('[data-dock]').forEach(button => {
+      const name = artwork[button.dataset.dock];
+      if (name) button.querySelector('.dock-icon').innerHTML = `<img class="dock-art" src="./assets/icons/${name}.svg" alt="" draggable="false">`;
+    });
+
     if (!dock.querySelector('.gg-dock-separator')) {
       const separator = document.createElement('span');
       separator.className = 'gg-dock-separator';
@@ -451,10 +560,11 @@
       trash.type = 'button';
       trash.dataset.dock = 'trash';
       trash.setAttribute('aria-label', 'Trash');
-      trash.innerHTML = `<span class="tooltip">Trash</span><span class="dock-icon">${trashSVG}</span>`;
+      trash.innerHTML = `<span class="tooltip">Trash</span><span class="dock-icon"><img class="dock-art" src="./assets/icons/trash.svg" alt="" draggable="false"></span>`;
       trash.addEventListener('click', (event) => {
         event.stopPropagation();
         hideContextMenu();
+        showInfo(null, 'Trash', 'Empty', 'No portfolio content is deleted.');
       });
       dock.appendChild(trash);
     }
@@ -570,7 +680,7 @@
   function bindContextMenu() {
     document.addEventListener('contextmenu', (event) => {
       const icon = event.target.closest('.desktop-icon');
-      const onDesktop = event.target.closest('#desktop');
+      const onDesktop = event.target.closest('#desktop') && !event.target.closest('.finder-window');
 
       if (!icon && !onDesktop) return;
       event.preventDefault();
@@ -621,7 +731,7 @@
         });
       }
     });
-    observer.observe(layer, { childList: true, subtree: true });
+    observer.observe(layer, { childList: true });
   }
 
   function bindDesktopKeyboardOpen() {

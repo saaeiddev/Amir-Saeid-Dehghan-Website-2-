@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2560" height="1600" viewBox="0 0 2560 1600" preserveAspectRatio="xMidYMid slice">
+<!-- Original vector interpretation of the warm, folded satin desktop reference. -->
+<defs>
+ <linearGradient id="base" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#766151"/><stop offset=".46" stop-color="#3c322f"/><stop offset="1" stop-color="#72717e"/></linearGradient>
+ <linearGradient id="r1" x1=".12" y1=".08" x2=".65" y2=".9"><stop stop-color="#3b3531"/><stop offset=".32" stop-color="#8e7d68"/><stop offset=".7" stop-color="#c9b899"/><stop offset=".92" stop-color="#e9dfc9"/><stop offset="1" stop-color="#8c7e6e"/></linearGradient>
+ <linearGradient id="r2" x1=".5" y1="0" x2=".42" y2="1"><stop stop-color="#393431"/><stop offset=".28" stop-color="#797168"/><stop offset=".59" stop-color="#b8ac98"/><stop offset=".77" stop-color="#e8deca"/><stop offset=".86" stop-color="#f3eddf"/><stop offset=".88" stop-color="#8e7e6a"/><stop offset="1" stop-color="#534638"/></linearGradient>
+ <linearGradient id="r3" x1=".44" y1=".25" x2=".7" y2="1"><stop stop-color="#51413a"/><stop offset=".45" stop-color="#9d8971"/><stop offset=".64" stop-color="#d2c5b0"/><stop offset=".77" stop-color="#ece8df"/><stop offset=".79" stop-color="#8e8786"/><stop offset="1" stop-color="#575664"/></linearGradient>
+ <linearGradient id="edge" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#e8dac3" stop-opacity=".2"/><stop offset=".5" stop-color="#fffdf4" stop-opacity=".95"/><stop offset="1" stop-color="#cac5c0" stop-opacity=".3"/></linearGradient>
+ <linearGradient id="r4" x1=".2" y1=".2" x2="1" y2="1"><stop stop-color="#534336"/><stop offset=".38" stop-color="#a4998b"/><stop offset=".76" stop-color="#c5c3c5"/><stop offset="1" stop-color="#797987"/></linearGradient>
+ <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="22"/></filter>
+</defs>
+<path fill="url(#base)" d="M0 0h2560v1600H0z"/>
+<path d="M-500-200H161Q725 79 644 500T-130 1355" fill="none" stroke="#201a16" stroke-width="65" opacity=".44" filter="url(#shadow)"/>
+<path d="M-500-200H120Q680 61 618 465T-100 1300Z" fill="url(#r1)"/>
+<path d="M120-200Q680 61 618 465T-100 1300" fill="none" stroke="url(#edge)" stroke-width="6"/>
+<path d="M770-200Q1930-58 1890 343C1840 814 876 927-90 1700" fill="none" stroke="#231b16" stroke-width="85" opacity=".47" filter="url(#shadow)"/>
+<path d="M640-220H1240Q1950-31 1890 348C1820 805 816 1000-90 1630L-100 1295Q570 787 618 465Q685 95 120-200Z" fill="url(#r2)"/>
+<path d="M1240-220Q1950-31 1890 348C1820 805 816 1000-90 1630" fill="none" stroke="url(#edge)" stroke-width="7"/>
+<path d="M2340-170Q2910 312 2180 905L1450 1650" fill="none" stroke="#2c221e" stroke-width="80" opacity=".4" filter="url(#shadow)"/>
+<path d="M1240-220H2380Q2890 265 2190 870L1430 1650H-90C816 1000 1820 805 1890 348Q1950-31 1240-220Z" fill="url(#r3)"/>
+<path d="M2380-220Q2890 265 2190 870L1430 1650" fill="none" stroke="url(#edge)" stroke-width="7"/>
+<path d="M2580 290V1650H1430L2190 870Q2500 604 2580 290Z" fill="url(#r4)"/>
+</svg>

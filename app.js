@@ -62,7 +62,7 @@
       const icons = [...desktopIcons.querySelectorAll('.desktop-icon')];
       const current = icons.indexOf(document.activeElement);
       if (current < 0) return;
-      const cols = window.innerWidth <= 420 ? 2 : window.innerWidth <= 820 ? 3 : 2;
+      const cols = getComputedStyle(desktopIcons).gridTemplateColumns.split(' ').length;
       let next = current;
       if (event.key === 'ArrowRight') next = Math.min(icons.length - 1, current + 1);
       if (event.key === 'ArrowLeft') next = Math.max(0, current - 1);
@@ -168,7 +168,7 @@
     if (!folder) return;
     if (windows.has(id)) {
       const state = windows.get(id);
-      if (state.minimized) restoreWindow(id);
+      if (state.minimized || state.el.classList.contains('closing')) restoreWindow(id);
       focusWindow(state.el);
       return;
     }
@@ -180,11 +180,12 @@
     el.innerHTML = windowTemplate(folder);
     const offset = windows.size % 5;
     if (window.innerWidth > 820) {
-      el.style.left = `${Math.min(window.innerWidth - 610, 170 + offset * 32)}px`;
-      el.style.top = `${65 + offset * 26}px`;
+      el.style.left = `${Math.max(12, (window.innerWidth - Math.min(980, window.innerWidth * .76)) / 2 - 55 + offset * 28)}px`;
+      el.style.top = `${Math.max(12, Math.min(80, window.innerHeight * .09)) + offset * 24}px`;
     }
     windowLayer.appendChild(el);
-    windows.set(id, { el, minimized: false, maximized: false });
+    windows.set(id, { el, minimized: false, maximized: false, timer: null });
+    clampWindow(el);
     bindWindow(el, id);
     focusWindow(el);
     setDockActive(id, true);
@@ -203,6 +204,9 @@
       if (movie) openMovie(Number(movie.dataset.movie));
     });
     enableDrag(el, el.querySelector('[data-drag-handle]'));
+    const sizeObserver = new ResizeObserver(() => { if (el.isConnected) clampWindow(el); });
+    sizeObserver.observe(el);
+    windows.get(id).sizeObserver = sizeObserver;
   }
 
   function focusWindow(el) {
@@ -222,7 +226,9 @@
     const state = windows.get(id);
     if (!state) return;
     state.el.classList.add('closing');
-    setTimeout(() => {
+    clearTimeout(state.timer);
+    state.timer = setTimeout(() => {
+      state.sizeObserver?.disconnect();
       state.el.remove();
       windows.delete(id);
       setDockActive(id, false);
@@ -233,18 +239,25 @@
   function minimizeWindow(id) {
     const state = windows.get(id);
     if (!state || state.minimized) return;
+    const wr = state.el.getBoundingClientRect();
+    const dr = dock.querySelector(`[data-dock="${id}"]`).getBoundingClientRect();
+    state.el.style.setProperty('--gg-min-x', `${dr.left + dr.width / 2 - (wr.left + wr.width / 2)}px`);
+    state.el.style.setProperty('--gg-min-y', `${dr.top + dr.height / 2 - (wr.top + wr.height / 2)}px`);
     state.el.classList.add('minimizing');
     state.minimized = true;
-    setTimeout(() => { state.el.style.display = 'none'; state.el.classList.remove('minimizing'); }, 255);
+    clearTimeout(state.timer);
+    state.timer = setTimeout(() => { state.el.style.display = 'none'; state.el.classList.remove('minimizing'); }, 240);
     focusMostRecentVisible(id);
   }
 
   function restoreWindow(id) {
     const state = windows.get(id);
     if (!state) return;
+    clearTimeout(state.timer);
+    state.el.classList.remove('minimizing', 'closing');
     state.el.style.display = '';
     state.minimized = false;
-    state.el.animate([{opacity:0, transform:'translateY(35px) scale(.82)'},{opacity:1,transform:'none'}], {duration:240,easing:'cubic-bezier(.2,.8,.2,1)'});
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) state.el.animate([{opacity:0, transform:'translateY(8px) scale(.97)'},{opacity:1,transform:'none'}], {duration:220,easing:'cubic-bezier(.2,.8,.2,1)'});
     focusWindow(state.el);
   }
 
@@ -253,6 +266,8 @@
     if (!state) return;
     state.maximized = !state.maximized;
     state.el.classList.toggle('maximized', state.maximized);
+    state.el.querySelector('[data-action=maximize]').setAttribute('aria-label', state.maximized ? 'Restore window size' : 'Maximize window');
+    if (!state.maximized) clampWindow(state.el);
     focusWindow(state.el);
   }
 
@@ -266,13 +281,22 @@
   function setDockActive(id, active) {
     const app = dock.querySelector(`[data-dock="${id}"]`);
     if (app) app.classList.toggle('active', active);
+    dock.querySelector('[data-dock=finder]')?.classList.toggle('active', windows.size > 0);
+  }
+
+  function clampWindow(win) {
+    if (window.innerWidth <= 820 || win.classList.contains('maximized')) return;
+    const maxLeft = Math.max(6, windowLayer.clientWidth - win.offsetWidth - 6);
+    const maxTop = Math.max(6, windowLayer.clientHeight - win.offsetHeight - 88);
+    win.style.left = `${Math.max(6, Math.min(maxLeft, win.offsetLeft))}px`;
+    win.style.top = `${Math.max(6, Math.min(maxTop, win.offsetTop))}px`;
   }
 
   function enableDrag(win, handle) {
     let dragging = false;
     let startX = 0, startY = 0, startLeft = 0, startTop = 0;
     handle.addEventListener('pointerdown', (event) => {
-      if (event.target.closest('.traffic-lights') || window.innerWidth <= 820 || win.classList.contains('maximized')) return;
+      if (event.target.closest('button, input, a') || window.innerWidth <= 820 || win.classList.contains('maximized')) return;
       dragging = true;
       startX = event.clientX;
       startY = event.clientY;
@@ -283,10 +307,9 @@
     });
     handle.addEventListener('pointermove', (event) => {
       if (!dragging) return;
-      const maxLeft = window.innerWidth - Math.min(win.offsetWidth, 240);
-      const maxTop = window.innerHeight - 120;
-      win.style.left = `${Math.max(-win.offsetWidth + 180, Math.min(maxLeft, startLeft + event.clientX - startX))}px`;
-      win.style.top = `${Math.max(6, Math.min(maxTop, startTop + event.clientY - startY))}px`;
+      win.style.left = `${startLeft + event.clientX - startX}px`;
+      win.style.top = `${startTop + event.clientY - startY}px`;
+      clampWindow(win);
     });
     const stop = () => dragging = false;
     handle.addEventListener('pointerup', stop);
@@ -332,7 +355,10 @@
 
   function updateClock() {
     const now = new Date();
-    menuClock.textContent = new Intl.DateTimeFormat(undefined, { weekday:'short', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }).format(now);
+    const compact = window.innerWidth < 620;
+    menuClock.textContent = new Intl.DateTimeFormat(undefined, compact ? {hour:'2-digit',minute:'2-digit'} : {weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}).format(now);
+    menuClock.dateTime = now.toISOString();
+    menuClock.setAttribute('aria-label', now.toLocaleString());
   }
 
   const menuMap = {
@@ -355,7 +381,7 @@
     const items = menuMap[trigger.dataset.menu] || [];
     menuPopover.innerHTML = items.map(item => item[0] === 'separator' ? '<div class="separator"></div>' : `<button role="menuitem" type="button" ${item[1] ? `data-command="${item[1]}"` : 'disabled'}><span>${item[0]}</span>${item[1] === 'projects' ? '<span>⌘P</span>' : ''}</button>`).join('');
     const rect = trigger.getBoundingClientRect();
-    menuPopover.style.left = `${Math.min(rect.left, window.innerWidth - 250)}px`;
+    menuPopover.style.left = `${Math.max(6, Math.min(rect.left, window.innerWidth - 250))}px`;
     menuPopover.classList.remove('hidden');
   });
 
@@ -444,8 +470,11 @@
   });
 
   window.addEventListener('resize', () => {
-    if (window.innerWidth <= 820) windows.forEach(state => { state.el.style.left = '8px'; state.el.style.top = '8px'; });
+    windows.forEach(state => clampWindow(state.el));
+    updateClock();
   });
+
+  window.DESKTOP = Object.freeze({openWindow, closeWindow, minimizeWindow, restoreWindow, runCommand});
 
   renderDesktop();
   renderDock();
